@@ -1,4 +1,4 @@
-/*! steroids-js - v3.1.11 - 2014-06-09 11:39 */
+/*! steroids-js - v3.5.0 - 2014-07-14 14:14 */
 (function(window){
 var Bridge,
   __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
@@ -2201,6 +2201,35 @@ TabBar = (function(_super) {
     });
   };
 
+  TabBar.prototype.replace = function(options, callbacks) {
+    var parameters, scale, _i, _ref;
+    if (options == null) {
+      options = {};
+    }
+    if (callbacks == null) {
+      callbacks = {};
+    }
+    steroids.debug("steroids.tabBar.replace options: " + (JSON.stringify(options)) + " callbacks: " + (JSON.stringify(callbacks)));
+    if (options.constructor.name === "Object") {
+      parameters = {};
+      parameters.tabs = [];
+      for (scale = _i = 0, _ref = options.tabs.length; 0 <= _ref ? _i < _ref : _i > _ref; scale = 0 <= _ref ? ++_i : --_i) {
+        parameters.tabs.push({
+          target_url: options.tabs[scale].location,
+          title: options.tabs[scale].title,
+          image_path: options.tabs[scale].icon,
+          position: options.tabs[scale].position
+        });
+      }
+      return steroids.nativeBridge.nativeCall({
+        method: "replaceTabs",
+        parameters: parameters,
+        successCallbacks: [callbacks.onSuccess],
+        failureCallbacks: [callbacks.onFailure]
+      });
+    }
+  };
+
   return TabBar;
 
 })(EventsSupport);
@@ -3372,18 +3401,20 @@ PostMessage = (function() {
   };
 
   PostMessage.dispatchMessageEvent = function(escapedJSONMessage, targetOrigin) {
-    var e, message;
-    message = JSON.parse(unescape(escapedJSONMessage));
-    e = document.createEvent("MessageEvent");
-    e.initMessageEvent("message", false, false, message, "", "", window, null);
-    return window.dispatchEvent(e);
+    return setTimeout(function() {
+      var e, message;
+      message = JSON.parse(unescape(escapedJSONMessage));
+      e = document.createEvent("MessageEvent");
+      e.initMessageEvent("message", false, false, message, "", "", window, null);
+      return window.dispatchEvent(e);
+    }, 1);
   };
 
   return PostMessage;
 
 }).call(this);
 ;window.steroids = {
-  version: "3.1.11",
+  version: "3.5.0",
   Animation: Animation,
   File: File,
   views: {
