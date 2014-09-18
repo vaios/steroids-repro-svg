@@ -1,4 +1,4 @@
-/*! steroids-js - v3.5.1 - 2014-08-21 14:05 */
+/*! steroids-js - v3.5.3 - 2014-09-18 14:50 */
 (function(window){
 var Bridge,
   __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
@@ -1168,6 +1168,7 @@ Modal = (function(_super) {
           successCallbacks: [callbacks.onSuccess],
           failureCallbacks: [callbacks.onFailure]
         });
+      case "MapView":
       case "WebView":
         parameters = view.id != null ? {
           id: view.id
@@ -1184,6 +1185,9 @@ Modal = (function(_super) {
           parameters.hidesNavigationBar = false;
         } else {
           parameters.hidesNavigationBar = true;
+        }
+        if (view.constructor.name === "MapView") {
+          parameters.map = view;
         }
         return steroids.nativeBridge.nativeCall({
           method: "openModal",
@@ -1553,12 +1557,23 @@ LayerCollection = (function(_super) {
       parameters.pushAnimationCurve = options.animation.curve;
       parameters.popAnimationCurve = options.animation.reversedCurve;
     }
-    return steroids.nativeBridge.nativeCall({
-      method: "openLayer",
-      parameters: parameters,
-      successCallbacks: [callbacks.onSuccess],
-      failureCallbacks: [callbacks.onFailure]
-    });
+    switch (view.constructor.name) {
+      case "MapView":
+        parameters.map = view.getMapParameters();
+        return steroids.nativeBridge.nativeCall({
+          method: "openMapLayer",
+          parameters: parameters,
+          successCallbacks: [callbacks.onSuccess],
+          failureCallbacks: [callbacks.onFailure]
+        });
+      default:
+        return steroids.nativeBridge.nativeCall({
+          method: "openLayer",
+          parameters: parameters,
+          successCallbacks: [callbacks.onSuccess],
+          failureCallbacks: [callbacks.onFailure]
+        });
+    }
   };
 
   LayerCollection.prototype.replace = function(options, callbacks) {
@@ -2214,13 +2229,16 @@ TabBar = (function(_super) {
     steroids.debug("steroids.tabBar.update options: " + (JSON.stringify(options)) + " callbacks: " + (JSON.stringify(callbacks)));
     if (options.constructor.name === "Object") {
       parameters = {};
+      parameters.position = options.position;
       parameters.tabs = [];
-      for (scale = _i = 0, _ref = options.tabs.length; 0 <= _ref ? _i < _ref : _i > _ref; scale = 0 <= _ref ? ++_i : --_i) {
-        parameters.tabs.push({
-          title: options.tabs[scale].title,
-          image_path: options.tabs[scale].icon,
-          badge: options.tabs[scale].badge
-        });
+      if (options.tabs) {
+        for (scale = _i = 0, _ref = options.tabs.length; 0 <= _ref ? _i < _ref : _i > _ref; scale = 0 <= _ref ? ++_i : --_i) {
+          parameters.tabs.push({
+            title: options.tabs[scale].title,
+            image_path: options.tabs[scale].icon,
+            badge: options.tabs[scale].badge
+          });
+        }
       }
     }
     return steroids.nativeBridge.nativeCall({
@@ -2265,7 +2283,8 @@ TabBar = (function(_super) {
 })(EventsSupport);
 ;var WebView,
   __hasProp = {}.hasOwnProperty,
-  __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+  __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
+  __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
 WebView = (function(_super) {
   __extends(WebView, _super);
@@ -2284,6 +2303,9 @@ WebView = (function(_super) {
     }
     WebView.__super__.constructor.call(this, "webview", ["created", "preloaded", "unloaded"]);
     this.location = options.constructor.name === "String" ? options : options.location;
+    if (options.parameters != null) {
+      this.setParams(options.parameters);
+    }
     this.id = options.id != null ? options.id : void 0;
     if (this.location.indexOf("://") === -1) {
       if (window.location.href.indexOf("file://") === -1) {
@@ -2350,10 +2372,27 @@ WebView = (function(_super) {
     pairStrings = this.location.slice(this.location.indexOf('?') + 1).split('&');
     for (_i = 0, _len = pairStrings.length; _i < _len; _i++) {
       pairString = pairStrings[_i];
+      if (!(pairString !== location.href)) {
+        continue;
+      }
       pair = pairString.split('=');
-      params[pair[0]] = pair[1];
+      params[decodeURIComponent(pair[0])] = decodeURIComponent(pair[1]);
     }
     return params;
+  };
+
+  WebView.prototype.setParams = function(object) {
+    var key, value, _results;
+    _results = [];
+    for (key in object) {
+      value = object[key];
+      _results.push(this.setParam(key, value));
+    }
+    return _results;
+  };
+
+  WebView.prototype.setParam = function(key, value) {
+    return this.location = this.location + (__indexOf.call(this.location, "?") >= 0 ? "&" : "?") + ("" + (encodeURIComponent(key)) + "=" + (encodeURIComponent(value)));
   };
 
   WebView.prototype.removeLoading = function(options, callbacks) {
@@ -2509,6 +2548,57 @@ PreviewFileView = (function() {
   return PreviewFileView;
 
 })();
+;var MapView,
+  __hasProp = {}.hasOwnProperty,
+  __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+
+MapView = (function(_super) {
+  __extends(MapView, _super);
+
+  function MapView(options) {
+    if (options == null) {
+      options = {};
+    }
+    if (options.location == null) {
+      options.location = "map_empty_overlay.html";
+    }
+    MapView.__super__.constructor.call(this, options);
+    this.mapType = options.constructor.name === "String" ? options : options.mapType;
+    this.showsUserLocation = options.showsUserLocation;
+    this.region = options.region;
+  }
+
+  MapView.prototype.getMapParameters = function() {
+    return {
+      mapType: this.mapType,
+      showsUserLocation: this.showsUserLocation,
+      region: this.region
+    };
+  };
+
+  MapView.prototype.addMarkers = function(options, callbacks) {
+    var markers;
+    if (options == null) {
+      options = {};
+    }
+    if (callbacks == null) {
+      callbacks = {};
+    }
+    markers = options.constructor.name === "Array" ? options : options.markers;
+    return steroids.nativeBridge.nativeCall({
+      method: "addMarkersToMap",
+      parameters: {
+        id: this.id,
+        markers: markers
+      },
+      successCallbacks: [callbacks.onSuccess],
+      failureCallbacks: [callbacks.onFailure]
+    });
+  };
+
+  return MapView;
+
+})(WebView);
 ;var Audio;
 
 Audio = (function() {
@@ -3487,12 +3577,13 @@ PostMessage = (function() {
 ;var _this = this;
 
 window.steroids = {
-  version: "3.5.1",
+  version: "3.5.3",
   Animation: Animation,
   File: File,
   views: {
     WebView: WebView,
-    PreviewFileView: PreviewFileView
+    PreviewFileView: PreviewFileView,
+    MapView: MapView
   },
   buttons: {
     NavigationBarButton: NavigationBarButton
