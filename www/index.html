@@ -1,31 +1,47 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <meta charset="utf8">
-  <meta name="viewport" content="width=device-width">
-  <title>Steroids Repro Template</title>
+    <head>
+        <meta charset="utf8">
+        <meta name="viewport" content="width=device-width">
+        <title>Steroids Repro Template</title>
 
-  <!-- cordova.js is served from localhost to ensure the correct version -->
-  <script src="http://localhost/cordova.js"></script>
-  <script src="/components/steroids-js/steroids.js"></script>
+        <!-- cordova.js is served from localhost to ensure the correct version -->
+        <script src="http://localhost/cordova.js"></script>
+        <script src="/components/steroids-js/steroids.js"></script>
 
-  <!--body background-color is set for Android not to show the loading screen forever-->
-  <style>
-  button {
-    font-size: 30px;
-    margin: 1em;
-  }
-  body {
-    background-color: white; 
-  }
-  </style>
+        <!--body background-color is set for Android not to show the loading screen forever-->
+        <style>
+            button {
+                font-size: 30px;
+                margin: 1em;
+            }
+            body {
+                background-color: white; 
+            }
+        </style>
 
-</head>
-<body>
-  <h2>Steroids Repro Template</h2>
+    </head>
+    <body>
+        <h2>Steroids Repro Template</h2>
 
-  <script>
-    //Add your JavaScripts here
-  </script>
-</body>
+        <script>
+
+
+            steroids.view.navigationBar.show({
+                title: "test AG repro"
+            });
+            //define new button to replace back button
+            var logoButton = new steroids.buttons.NavigationBarButton();
+            logoButton.imagePath = "/icons/add.png";
+            logoButton.imageAsOriginal = "true";
+            //update view
+            steroids.view.navigationBar.update({
+                overrideBackButton: true,
+                buttons: {
+                    left: [logoButton]
+                            //right: [myButton]
+                }
+            });
+        </script>
+    </body>
 </html>
