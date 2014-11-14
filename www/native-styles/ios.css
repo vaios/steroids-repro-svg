@@ -1,0 +1,13 @@
+/*https://x.appgyver.com/categories/3-user-interface-and-design/contents/18-customizing-tab-bar-appearance*/
+
+navigation-bar {
+  background-color: #FF0000;
+}
+
+/* changes title for nav bar */
+navigation-bar title {
+  color: #2E2EFE;
+  font-size: 26px;
+  font-family: Impact;
+  font-weight: bold;
+}
