@@ -7,4 +7,5 @@ tab-bar {
 
 tab-bar #Tab {
   background-image: url(icons/add.svg);
+  background-size: 18;
 }
