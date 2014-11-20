@@ -10,13 +10,14 @@ steroids.config.location = "http://localhost/index.html"
 steroids.config.tabBar.enabled = true
 steroids.config.tabBar.tabs = [
    {
-     title: "Index"
-     icon: "icons/pill@2x.png"
+     id: "Tab"
+     title: ""
+     icon: ""
      location: "http://localhost/index.html"
    },
    {
      title: "Internet"
-     icon: "icons/telescope@2x.png"
+     icon: ""
      location: "http://localhost/index2.html"
    }
  ]
